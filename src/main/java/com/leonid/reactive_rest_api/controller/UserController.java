@@ -1,7 +1,10 @@
 package com.leonid.reactive_rest_api.controller;
 
+import com.leonid.reactive_rest_api.exceptions.EmailUniquenessException;
 import com.leonid.reactive_rest_api.model.User;
 import com.leonid.reactive_rest_api.repository.UserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,8 +18,23 @@ public class UserController {
     }
 
     @PostMapping
-    public Mono<User> createUser(@RequestBody User user) {
-        return userRepository.save(user);
+    public Mono<ResponseEntity<User>> createUser(@RequestBody User user) {
+        return userRepository.findByEmail(user.email())
+                .flatMap(existingUser -> Mono.error(new EmailUniquenessException("Email already exists!")))
+                .then(userRepository.save(user)) // Save the new user if the email doesn't exist
+                .map(ResponseEntity::ok) // Map the saved user to a ResponseEntity
+                .doOnNext(savedUser -> System.out.println("New user created: " + savedUser)) // Logging or further action
+                .onErrorResume(e -> { // Handling errors, such as email uniqueness violation
+                    System.out.println("An exception has occured: " + e.getMessage());
+                    if (e instanceof EmailUniquenessException) {
+                        return Mono.just(ResponseEntity
+                                .status(HttpStatus.CONFLICT).build());
+                    } else {
+                        return Mono.just(ResponseEntity
+                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .build());
+                    }
+                });
     }
 
     @GetMapping
