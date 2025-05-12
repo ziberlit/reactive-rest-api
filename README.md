@@ -11,8 +11,8 @@ This project is a Reactive REST API built using modern reactive programming prin
 
 ## Prerequisites
 
-- [Java 17 Development Kit (JDK 17)]
-- [curl or or whichever other tool you would use to make API calls]
+- Java 17 Development Kit (JDK 17)
+- curl or whichever other tool you would use to make API calls
 
 ## Installation
 
