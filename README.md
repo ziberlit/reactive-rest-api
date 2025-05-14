@@ -8,6 +8,7 @@ This project is a Reactive REST API built using modern reactive programming prin
 - Non-blocking I/O for improved scalability.
 - RESTful endpoints for seamless integration.
 - Easy-to-extend and modular design.
+- Supports backpressure-aware streaming
 
 ## Prerequisites
 
