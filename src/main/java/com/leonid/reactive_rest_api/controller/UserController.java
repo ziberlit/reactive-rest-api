@@ -8,11 +8,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
     private final UserRepository userRepository;
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
+
     public UserController(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -39,7 +43,21 @@ public class UserController {
 
     @GetMapping
     public Flux<User> getAllUsers() {
-        return userRepository.findAll();
+        long start = System.currentTimeMillis();
+        return userRepository.findAll()
+                .doOnSubscribe(subscription -> log.debug("Subscribed to User stream!"))
+                .doOnNext(user -> log.debug("Processed User: {} in {} ms", user.name(), System.currentTimeMillis() - start))
+                .doOnComplete(() -> log.info("Finished streaming users for getAllUsers in {} ms", System.currentTimeMillis() - start));
+    }
+
+    @GetMapping("/stream")
+    public Flux<User> streamUsers() {
+        long start = System.currentTimeMillis();
+        return userRepository.findAll()
+                .onBackpressureBuffer()  // Buffer strategy for back-pressure
+                .doOnNext(user -> log.debug("Processed User: {} in {} ms", user.name(), System.currentTimeMillis() - start))
+                .doOnError(error -> log.error("Error streaming users", error))
+                .doOnComplete(() -> log.info("Finished streaming users for streamUsers in {} ms", System.currentTimeMillis() - start));
     }
 
     @GetMapping("/{id}")
