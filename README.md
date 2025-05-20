@@ -25,7 +25,7 @@ This project is a Reactive REST API built using modern reactive programming prin
 
 ## Usage
 
-1. Compile and start the embedded with the Gradle build process:
+1. Compile and start the embedded server with the Gradle build process:
     ```bash
     ./gradlew bootRun
     ```
